@@ -14,7 +14,6 @@ namespace GymSys.Data
 
         }
 
-
         public DbSet<Client> Clients { get; set; }
 
         public DbSet<ClientCard> ClientCards { get; set; }
@@ -35,6 +34,8 @@ namespace GymSys.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            
+
             modelBuilder.Entity<ClientCard>(x =>
             {
                 x.HasKey(x => new { x.CardId, x.ClientId });

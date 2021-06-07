@@ -9,8 +9,9 @@ namespace GymSys
     public class Program
     {
         public static void Main(string[] args)
-        {           
+        {
             var db = new GymSysContext();
+
             bool isCommandFinished = false;
             PrintLogo();
             PrintWelcomeMessage();
@@ -20,65 +21,188 @@ namespace GymSys
                 Console.WriteLine();
                 Console.Write("Enter command: ");
                 string command = Console.ReadLine().ToLower();
+                string[] cmdArg = command.Split(" ", StringSplitOptions.RemoveEmptyEntries).ToArray();
                 Console.WriteLine();
 
-                if (command == "help")
+                if (cmdArg[0] == "help")
                 {
                     PrintCommandHelpMessage();
-                   // return;
+                    // return;
                 }
-
-                else if(command == "addtown")
+                // ADD COMMANDS 
+                else if (cmdArg[0] == "add")
                 {
-                    Console.Write("Please enter the name: ");
-                    string newName = Console.ReadLine();
-
-                    Town town = new Town
+                    if (cmdArg[1] == "client")
                     {
-                        Name = newName
-                    };
-                    Console.WriteLine($"The new town is {newName}");
-                    Console.WriteLine();
+                        Console.Write("Please enter first name: ");
+                        string firstName = Console.ReadLine();
 
-                    Console.WriteLine("Do you want to save changes ? Press 'Y' for YES or 'N' for NO");
-                    while (true)
-                    {
-                        command = Console.ReadLine().ToLower();
-                        if (command == "y")
+                        Console.Write("Please enter middle name: ");
+                        string middleName = Console.ReadLine();
+
+                        Console.Write("Please enter last name: ");
+                        string lastName = Console.ReadLine();
+
+                        Console.Write("Please enter phone number: ");
+                        string phoneNumber = Console.ReadLine();
+
+                        Console.Write("Please enter email address: ");
+                        string email = Console.ReadLine();
+
+                        Console.WriteLine("Choise one of the cities:");
+                        var allTowns = db.Towns.Select(x => new
                         {
-                            db.Towns.Add(town);
-                            db.SaveChanges();
-                            Console.WriteLine($"Succsessfull add in database");
-                            isCommandFinished = true;
-                            break;
-                        }
-                        else if(command == "n")
+                            x.TownId,
+                            x.Name,
+                        })
+                            .ToList();
+                        var sb = new StringBuilder();
+                        foreach (var item in allTowns.OrderBy(x => x.Name))
                         {
-                            Console.WriteLine("Is canceled. Please try again.");
+                            sb.AppendLine($"{item.TownId} => {item.Name}");
                         }
-                    }
 
-                    if(isCommandFinished)
-                    {
-                        break;
-                    }
-                }
+                        string result = sb.ToString().TrimEnd();
+                        Console.WriteLine(result);
+                        Console.Write("Enter the city Id : ");
+                        int sId = int.Parse(Console.ReadLine());
 
-                else if(command == "deletetown")
-                {
-                    Console.Write("Enter the town name who you want to delete: ");
-                    string townToDelete = Console.ReadLine();
-                    Town town = db.Towns.Where(x => x.Name == townToDelete).FirstOrDefault();
-                    if(town != null)
-                    {
-                        db.Towns.Remove(town);
+                        Client currentClient = new Client()
+                        {
+                            FirstName = firstName,
+                            MiddleName = middleName,
+                            LastName = lastName,
+                            PhoneNumber = phoneNumber,
+                            EmailAddress = email,
+                            TownId = sId,
+                        };
+                        db.Clients.Add(currentClient);
+
+                        var currentCity = allTowns.FirstOrDefault(x => x.TownId == sId);
+                        Console.WriteLine($"{currentClient.FirstName} {currentClient.MiddleName} {currentClient.LastName}" +
+                            $" with phone number {currentClient.PhoneNumber} with email {currentClient.EmailAddress} in city {currentCity.Name} is added to db");
+
                         db.SaveChanges();
-                        Console.WriteLine($"Succsessfully deleted the town with name {townToDelete}");
                     }
-                    else
+                    else if (cmdArg[1] == "town")
                     {
-                        Console.WriteLine($"The town {townToDelete} not exist in database");
+                        Console.Write("Please enter the name: ");
+                        string newName = Console.ReadLine();
+                        Town town = new Town
+                        {
+                            Name = newName
+                        };
+                        Console.WriteLine($"The new town is {newName}");
+                        Console.WriteLine();
+                        Console.WriteLine("Do you want to save changes ? Press 'Y' for YES or 'N' for NO");
+                        while (true)
+                        {
+                            command = Console.ReadLine().ToLower();
+                            if (command == "y")
+                            {
+                                db.Towns.Add(town);
+                                db.SaveChanges();
+                                Console.WriteLine($"Succsessfull add in database");
+                                isCommandFinished = true;
+
+                            }
+                            else if (command == "n")
+                            {
+                                Console.WriteLine("Is canceled. Please try again.");
+
+                            }
+
+                            if (isCommandFinished)
+                            {
+                                isCommandFinished = false;
+                                break;
+                            }
+                        }
                     }
+                }
+                else if (cmdArg[0] == "delete")
+                {
+                    if (cmdArg[1] == "client")
+                    {
+                        Console.WriteLine("Loading... please wait");
+                        Console.WriteLine();
+                        var allClients = db.Clients.Select(x => new
+                        {
+                            x.FirstName,
+                            x.MiddleName,
+                            x.LastName,
+                            x.ClientId,
+                            TownName = x.Town.Name
+                        })
+                            .OrderBy(x => x.FirstName)
+                            .ToList();
+
+                        var sb = new StringBuilder();
+                        foreach (var c in allClients)
+                        {
+                            sb.AppendLine($"{c.ClientId} => {c.FirstName} {c.MiddleName} {c.LastName}  |  {c.TownName}");
+                        }
+                        Console.WriteLine(sb);
+                        Console.WriteLine();
+                        Console.Write($"Choice id to delete: ");
+                        int idToDelete = int.Parse(Console.ReadLine());
+
+                        Client clientToDelete = db.Clients.FirstOrDefault(x => x.ClientId == idToDelete);
+                        if (isNull(clientToDelete))
+                        {
+                            Console.WriteLine($"Client not exist");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Client {clientToDelete.FirstName} {clientToDelete.LastName} with id {clientToDelete.ClientId} is deleted");
+                            db.Clients.Remove(clientToDelete);
+                            db.SaveChanges();
+                        }
+
+                    }
+                    else if (cmdArg[1] == "town")
+                    {
+                        Console.Write("Enter the town name who you want to delete: ");
+                        string townToDelete = Console.ReadLine();
+                        Town town = db.Towns.Where(x => x.Name == townToDelete).FirstOrDefault();
+                        if (town != null)
+                        {
+                            db.Towns.Remove(town);
+                            db.SaveChanges();
+                            Console.WriteLine($"Succsessfully deleted the town with name {townToDelete}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"The town {townToDelete} not exist in database");
+                        }
+                    }
+
+                }
+                else if(cmdArg[0] == "show")
+                {
+                    if(cmdArg[1] == "clients")
+                    {
+                        Wait();
+                        var allClients = db.Clients.OrderBy(x => x.FirstName).ToList();
+                        var sb = new StringBuilder();
+                        foreach (var c in allClients)
+                        {
+                            var curTown = db.Towns.FirstOrDefault(x => x.TownId == c.TownId);
+                            sb.AppendLine($"{c.ClientId} - {c.FirstName} {c.MiddleName} {c.LastName} - {curTown.Name}");
+                        }
+                        
+                        Console.WriteLine(sb);
+                    }
+                }
+
+                else if (cmdArg[0] == "end")
+                {
+                    Console.WriteLine("Bye bye :)");
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Wrong command. Please try again");
                 }
 
             }
@@ -87,10 +211,18 @@ namespace GymSys
         private static void PrintCommandHelpMessage()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Possible commands are:");
+            sb.AppendLine("COMMAND LIST");
             sb.AppendLine();
-            sb.AppendLine("-'AddTown'- Add new town in Towns table.");
-            sb.AppendLine("-'DeleteTown'- Delete town in Towns table if exist.");
+            sb.AppendLine("ADD COMMANDS:");
+            sb.AppendLine("-'Add Town'- Add new town in Towns table.");
+            sb.AppendLine("-'Add Client'- Add new client to database.");
+            sb.AppendLine();
+            sb.AppendLine("DELETE COMMANDS");
+            sb.AppendLine("-'Delete Town'- Delete town in Towns table if exist.");
+            sb.AppendLine("-'Delete Client'- Delete client from database if exist.");
+            sb.AppendLine();
+            sb.AppendLine("SHOW COMMANDS");
+            sb.AppendLine("-'SHOW CLIENTS'- Show list of all clients in database.");
 
             Console.WriteLine(sb.ToString());
 
@@ -121,6 +253,16 @@ namespace GymSys
             sb.AppendLine(@"           /   \");
             sb.AppendLine(@"          _|   |_");
             Console.WriteLine(sb);
+        }
+
+        private static bool isNull(Object item)
+        {
+            return item == null;
+        }
+
+        private static void Wait()
+        {
+            Console.WriteLine("Loading... please wait");
         }
     }
 }

@@ -15,16 +15,15 @@ namespace GymSys.Data.Models
         [MaxLength(50)]
         public string FirstName { get; set; }
 
-        [Required]
         [MaxLength(50)]
         public string MiddleName { get; set; }
 
         [Required]
         [MaxLength(50)]
-        public int LastName { get; set; }
+        public string LastName { get; set; }
 
-        [Required]
-        public int PersonalNumber { get; set; }
+        //[Required]
+        //public int PersonalNumber { get; set; }
 
         // [Required]
         // public Town Town { get; set; }
@@ -35,11 +34,11 @@ namespace GymSys.Data.Models
         [EmailAddress]        
         public string EmailAddress { get; set; }
 
-        public DateTime? RegistrationDate { get; set; }
+        //public DateTime? RegistrationDate { get; set; }
 
-        public int ClientCardId { get; set; }
+        //public int ClientCardId { get; set; }
 
-        public ClientCard ClientCard { get; set; }     
+        //public ClientCard ClientCard { get; set; }     
 
         public int TownId { get; set; }
 
