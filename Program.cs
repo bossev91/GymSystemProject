@@ -49,23 +49,8 @@ namespace GymSys
                         Console.Write("Please enter email address: ");
                         string email = Console.ReadLine();
 
-                        Console.WriteLine("Choise one of the cities:");
-                        var allTowns = db.Towns.Select(x => new
-                        {
-                            x.TownId,
-                            x.Name,
-                        })
-                            .ToList();
-                        var sb = new StringBuilder();
-                        foreach (var item in allTowns.OrderBy(x => x.Name))
-                        {
-                            sb.AppendLine($"{item.TownId} => {item.Name}");
-                        }
-
-                        string result = sb.ToString().TrimEnd();
-                        Console.WriteLine(result);
-                        Console.Write("Enter the city Id : ");
-                        int sId = int.Parse(Console.ReadLine());
+                        Console.Write("Enter town name: ");                        
+                        int townIndex = CreateTownAndReturnIndex(db);
 
                         Client currentClient = new Client()
                         {
@@ -74,15 +59,12 @@ namespace GymSys
                             LastName = lastName,
                             PhoneNumber = phoneNumber,
                             EmailAddress = email,
-                            TownId = sId,
+                            TownId = townIndex,
                         };
+                        
                         db.Clients.Add(currentClient);
-
-                        var currentCity = allTowns.FirstOrDefault(x => x.TownId == sId);
-                        Console.WriteLine($"{currentClient.FirstName} {currentClient.MiddleName} {currentClient.LastName}" +
-                            $" with phone number {currentClient.PhoneNumber} with email {currentClient.EmailAddress} in city {currentCity.Name} is added to db");
-
                         db.SaveChanges();
+                        Console.WriteLine($"Successfully created client : {currentClient.FirstName} {currentClient.MiddleName.Substring(0,1)}. {currentClient.LastName} ");
                     }
                     else if (cmdArg[1] == "town")
                     {
@@ -214,7 +196,7 @@ namespace GymSys
             sb.AppendLine("COMMAND LIST");
             sb.AppendLine();
             sb.AppendLine("ADD COMMANDS:");
-            sb.AppendLine("-'Add Town'- Add new town in Towns table.");
+            sb.AppendLine("-'Add Town'- Add new town in Towns table. : NOTE: When creating a client, the system will automatically create a town ");
             sb.AppendLine("-'Add Client'- Add new client to database.");
             sb.AppendLine();
             sb.AppendLine("DELETE COMMANDS");
@@ -263,6 +245,31 @@ namespace GymSys
         private static void Wait()
         {
             Console.WriteLine("Loading... please wait");
+        }
+
+        private static int CreateTownAndReturnIndex(GymSysContext db)
+        {
+            int townIndex = -1;
+            string cityName = Console.ReadLine();
+            Wait();
+            Town newTown = null;
+            if (!db.Towns.Any(x => x.Name == cityName))
+            {
+                newTown = new Town()
+                {
+                    Name = cityName
+                };
+                db.Towns.Add(newTown);
+
+                db.SaveChanges();
+            }
+            else
+            {
+                newTown = db.Towns.FirstOrDefault(x => x.Name == cityName);
+            }
+            townIndex = newTown.TownId;
+
+            return townIndex;
         }
     }
 }
